@@ -1,0 +1,39 @@
+#config
+COMMON_OBJECTS  = main.o state_machines.o led.o wdt_interrupt_handler.o p1_interrupt_handler.o switches.o
+CPU		= msp430g2553
+CFLAGS		= -mmcu=${CPU} -I../h
+LDFLAGS		= -L/opt/ti/msp430_gcc/include
+
+#adjust compiler for internal makes
+CC		= msp430-elf-gcc
+AS		= msp430-elf-as
+
+all: project_c.elf project_s.elf
+
+#additional file rules
+project_c.elf: ${COMMON_OBJECTS} blink_pattern_c.o
+	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^ ../lib/libTimer.a
+
+project_s.elf: ${COMMON_OBJECTS} blink_pattern_s.o
+	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^ ../lib/libTimer.a
+
+load_c: project_c.elf
+	msp430loader.sh $^
+
+load_s: project_s.elf
+	msp430loader.sh $^
+
+clean: 
+	rm -f *.o *.elf *~
+
+main.o: led.h
+
+led.o: led.h
+
+state_machines.o: led.h
+
+wdt_interrupt_handler.o: wdt_interrupt_handler.c led.h
+
+blink_pattern_c.o: blink_pattern_c.c led.h
+
+blink_pattern_s.s: blink_pattern_s.s led.h
